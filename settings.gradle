@@ -12,3 +12,4 @@ plugins {
 
 rootProject.name = 'iris'
 include('apps:replayengine')
+include('libs:awsconfig')
