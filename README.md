@@ -8,6 +8,7 @@ This project provides a complete development environment with:
 - Java application modules (app, list, utilities)
 - Kafka 4.1.0 in KRaft mode (no Zookeeper required)
 - Kafka-UI for topic monitoring and management
+- LocalStack for local AWS service simulation (S3, SQS, DynamoDB, Kinesis)
 - Docker Compose orchestration for easy setup
 
 ## Quick Start
@@ -17,10 +18,11 @@ This project provides a complete development environment with:
 - Docker and Docker Compose installed
 - Java 17+ (for building the Java modules)
 - Gradle (wrapper included)
+- AWS CLI (optional, for LocalStack testing)
 
-### Running Kafka Infrastructure
+### Running Infrastructure
 
-1. **Start Kafka and Kafka-UI:**
+1. **Start all services (Kafka, Kafka-UI, and LocalStack):**
    ```bash
    docker compose up -d
    ```
@@ -30,11 +32,15 @@ This project provides a complete development environment with:
    docker compose ps
    ```
 
-3. **Access Kafka-UI:**
-   Open your browser and go to [http://localhost:8080](http://localhost:8080)
+3. **Access services:**
+   - **Kafka-UI**: Open [http://localhost:8080](http://localhost:8080)
+   - **Kafka**: Available at `localhost:9092`
+   - **LocalStack**: Available at `localhost:4566`
 
-4. **Access Kafka directly:**
-   Kafka is available at `localhost:9092`
+4. **Check LocalStack health:**
+   ```bash
+   curl http://localhost:4566/_localstack/health
+   ```
 
 ### Building the Java Application
 
@@ -48,7 +54,104 @@ This project provides a complete development environment with:
 ./gradlew :app:run
 ```
 
+## LocalStack Infrastructure
+
+LocalStack provides local AWS services for development and testing without needing real AWS infrastructure.
+
+### Available Services
+
+- **S3**: Object storage service
+- **SQS**: Simple Queue Service
+- **DynamoDB**: NoSQL database
+- **Kinesis**: Real-time data streaming
+
+### Using LocalStack with AWS CLI
+
+First, configure your environment:
+
+```bash
+export AWS_ACCESS_KEY_ID=test
+export AWS_SECRET_ACCESS_KEY=test
+export AWS_DEFAULT_REGION=us-east-1
+export AWS_ENDPOINT_URL=http://localhost:4566
+```
+
+#### S3 Examples
+
+```bash
+# Create a bucket
+aws s3 mb s3://my-test-bucket
+
+# List buckets
+aws s3 ls
+
+# Upload a file
+echo "Hello LocalStack" > test.txt
+aws s3 cp test.txt s3://my-test-bucket/
+
+# List objects in bucket
+aws s3 ls s3://my-test-bucket/
+```
+
+#### SQS Examples
+
+```bash
+# Create a queue
+aws sqs create-queue --queue-name my-test-queue
+
+# List queues
+aws sqs list-queues
+
+# Send a message
+aws sqs send-message --queue-url http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/my-test-queue --message-body "Hello from SQS"
+```
+
+#### DynamoDB Examples
+
+```bash
+# Create a table
+aws dynamodb create-table \
+    --table-name my-test-table \
+    --attribute-definitions AttributeName=id,AttributeType=S \
+    --key-schema AttributeName=id,KeyType=HASH \
+    --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5
+
+# List tables
+aws dynamodb list-tables
+
+# Put an item
+aws dynamodb put-item \
+    --table-name my-test-table \
+    --item '{"id": {"S": "test-id"}, "name": {"S": "Test Item"}}'
+```
+
+#### Kinesis Examples
+
+```bash
+# Create a stream
+aws kinesis create-stream --stream-name my-test-stream --shard-count 1
+
+# List streams
+aws kinesis list-streams
+
+# Put a record
+aws kinesis put-record \
+    --stream-name my-test-stream \
+    --partition-key "test-key" \
+    --data "Hello Kinesis"
+```
+
+### LocalStack Web UI
+
+LocalStack also provides a web interface at [http://localhost:4566](http://localhost:4566) where you can:
+- View service health status
+- Browse S3 buckets and objects
+- Monitor SQS queues
+- Inspect DynamoDB tables
+- View Kinesis streams
+
 ## Kafka Infrastructure
+
 
 ### Services
 
@@ -177,9 +280,10 @@ To add more Kafka brokers for a multi-broker setup:
 
 ### Common Issues
 
-1. **Port conflicts**: Make sure ports 8080, 9092, and 9093 are not in use
+1. **Port conflicts**: Make sure ports 8080, 9092, 9093, and 4566 are not in use
 2. **Memory issues**: Adjust `KAFKA_HEAP_OPTS` in docker-compose.yml if needed
 3. **Startup timing**: Kafka-UI depends on Kafka being healthy; wait for full startup
+4. **LocalStack connectivity**: Ensure LocalStack is healthy using the health endpoint
 
 ### Useful Commands
 
@@ -187,16 +291,18 @@ To add more Kafka brokers for a multi-broker setup:
 # Check logs
 docker compose logs kafka
 docker compose logs kafka-ui
+docker compose logs localstack
 
 # Restart services
-docker compose restart kafka kafka-ui
+docker compose restart kafka kafka-ui localstack
 
 # Clean reset (removes all data)
 docker compose down -v
 docker compose up -d
 
-# Check Kafka health
+# Check service health
 docker exec kafka /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092
+curl http://localhost:4566/_localstack/health
 ```
 
 ### Monitoring
@@ -208,9 +314,13 @@ docker exec kafka /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server
 ## Development Workflow
 
 1. Start the infrastructure: `docker compose up -d`
-2. Develop your Java application using Kafka at `localhost:9092`
-3. Monitor topics and messages using Kafka-UI at `localhost:8080`
-4. Test with different topics and consumer groups
+2. Develop your Java application using:
+   - Kafka at `localhost:9092`
+   - LocalStack AWS services at `localhost:4566`
+3. Monitor and test with web interfaces:
+   - Kafka topics and messages using Kafka-UI at `localhost:8080`
+   - AWS services using LocalStack dashboard at `localhost:4566`
+4. Test with different topics, queues, tables, and streams
 5. Scale or modify configuration as needed
 
 ## Configuration
