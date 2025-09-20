@@ -1,0 +1,42 @@
+# Test configuration for Replay Engine
+spring:
+  application:
+    name: iris-replay-engine-test
+
+# Test replay configuration
+replay:
+  speed-mode: burst
+  burst-batch-size: 10
+  checkpoint:
+    enabled: false  # Disable checkpointing in tests
+  source:
+    type: local-file
+    local:
+      file-path: /tmp/test-events.json
+
+# Test Kafka configuration (will use embedded/test containers)
+kafka:
+  bootstrap-servers: localhost:29092
+  producer:
+    acks: 1
+    retries: 1
+    batch-size: 1024
+
+# Test AWS configuration
+aws:
+  aws-region: us-east-1
+  endpoint-url: http://localhost:4566
+  use-local-stack: true
+  access-key: test
+  secret-key: test
+
+# Disable web server for tests
+server:
+  port: 0
+
+# Minimal logging for tests
+logging:
+  level:
+    org.jaiswarsecurities.replayengine: INFO
+    org.springframework: WARN
+    org.apache.kafka: WARN
