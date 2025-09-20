@@ -8,3 +8,7 @@ build
 .idea/
 *.iml
 *.iws
+
+# Docker & Kafka
+.env
+docker-compose.override.yml
