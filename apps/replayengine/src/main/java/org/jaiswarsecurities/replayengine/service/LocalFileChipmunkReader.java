@@ -8,13 +8,13 @@ import org.jaiswarsecurities.replayengine.config.ReplayProperties;
 import org.jaiswarsecurities.replayengine.model.ChipmunkEvent;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -22,65 +22,63 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 /**
- * Implementation of ChipmunkReader that reads files from MinIO/S3.
- * Uses the existing S3Client from awsconfig library.
+ * Implementation of ChipmunkReader that reads files from local filesystem.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "replay.source.type", havingValue = "minio")
-public class MinIOChipmunkReader implements ChipmunkReader {
+@ConditionalOnProperty(name = "replay.source.type", havingValue = "local-file")
+public class LocalFileChipmunkReader implements ChipmunkReader {
     
-    private final S3Client s3Client;
     private final ReplayProperties replayProperties;
     private final ObjectMapper objectMapper;
     
     @Override
     public Stream<ChipmunkEvent> readEvents() throws IOException {
-        ReplayProperties.Source.Minio minioConfig = replayProperties.getSource().getMinio();
+        String filePath = replayProperties.getSource().getLocal().getFilePath();
+        Path path = Paths.get(filePath);
         
-        log.info("Reading Chipmunk file from MinIO: bucket={}, key={}", 
-                minioConfig.getBucketName(), minioConfig.getObjectKey());
-        
-        try {
-            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                    .bucket(minioConfig.getBucketName())
-                    .key(minioConfig.getObjectKey())
-                    .build();
-            
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(
-                            s3Client.getObject(getObjectRequest), 
-                            StandardCharsets.UTF_8
-                    )
-            );
-            
-            AtomicLong lineNumber = new AtomicLong(0);
-            
-            return reader.lines()
-                    .filter(line -> !line.trim().isEmpty() && !line.startsWith("#"))
-                    .map(line -> parseChipmunkLine(line, lineNumber.incrementAndGet()))
-                    .filter(event -> event != null);
-                    
-        } catch (Exception e) {
-            log.error("Error reading from MinIO: bucket={}, key={}", 
-                    minioConfig.getBucketName(), minioConfig.getObjectKey(), e);
-            throw new IOException("Failed to read Chipmunk file from MinIO", e);
+        if (!Files.exists(path)) {
+            throw new IOException("Chipmunk file not found: " + filePath);
         }
+        
+        log.info("Reading Chipmunk file from local filesystem: {}", filePath);
+        
+        BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8);
+        AtomicLong lineNumber = new AtomicLong(0);
+        
+        return reader.lines()
+                .filter(line -> !line.trim().isEmpty() && !line.startsWith("#"))
+                .map(line -> parseChipmunkLine(line, lineNumber.incrementAndGet()))
+                .filter(event -> event != null)
+                .onClose(() -> {
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                        log.warn("Error closing file reader", e);
+                    }
+                });
     }
     
     @Override
     public long getTotalEventCount() throws IOException {
-        // For streaming from MinIO, we can't efficiently get line count without reading the entire file
-        // In a production system, you might want to store metadata about files
-        log.debug("Total event count not available for streaming MinIO reads");
-        return -1;
+        String filePath = replayProperties.getSource().getLocal().getFilePath();
+        Path path = Paths.get(filePath);
+        
+        if (!Files.exists(path)) {
+            throw new IOException("Chipmunk file not found: " + filePath);
+        }
+        
+        try (Stream<String> lines = Files.lines(path)) {
+            return lines
+                    .filter(line -> !line.trim().isEmpty() && !line.startsWith("#"))
+                    .count();
+        }
     }
     
     @Override
     public void close() throws IOException {
-        // S3Client is managed by Spring, no explicit cleanup needed
-        log.debug("MinIOChipmunkReader closed");
+        log.debug("LocalFileChipmunkReader closed");
     }
     
     /**
@@ -122,7 +120,7 @@ public class MinIOChipmunkReader implements ChipmunkReader {
         // this would be based on the actual Chipmunk file format specification
         if (data.containsKey("trade_id") || data.containsKey("tradeId")) {
             return ChipmunkEvent.EventType.TRADE;
-        } else if (data.containsKey("symbol") && data.containsKey("price")) {
+        } else if (data.containsKey("symbol") && data.containsKey("price") && !data.containsKey("trade_id")) {
             return ChipmunkEvent.EventType.MARKET_DATA;
         } else if (data.containsKey("currency_pair") || data.containsKey("base_currency")) {
             return ChipmunkEvent.EventType.FX_RATE;
