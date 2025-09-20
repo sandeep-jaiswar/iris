@@ -38,7 +38,6 @@ services:
       
     volumes:
       - kafka-data:/var/lib/kafka/data
-      - ./config/server.properties:/opt/kafka/config/kraft/server.properties
     healthcheck:
       test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"]
       interval: 30s
@@ -97,8 +96,43 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    hostname: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      # LocalStack configuration
+      SERVICES: s3,sqs,dynamodb,kinesis
+      DEBUG: 1
+      DOCKER_HOST: unix:///var/run/docker.sock
+      LOCALSTACK_HOST: localhost.localstack.cloud
+      PERSISTENCE: 1
+      
+      # AWS configuration for LocalStack
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      
+      # Service-specific configuration
+      S3_ENABLE_VIRTUALHOST_STYLE: "false"
+      
+    volumes:
+      - localstack-data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
 volumes:
   kafka-data:
+    driver: local
+  localstack-data:
     driver: local
 
 networks:
