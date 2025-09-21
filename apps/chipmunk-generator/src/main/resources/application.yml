@@ -60,7 +60,7 @@ chipmunk:
 # AWS Configuration for MinIO
 aws:
   endpoint-url: ${AWS_ENDPOINT_URL:http://localhost:4566}
-  region: ${AWS_REGION:us-east-1}
+  aws-region: ${AWS_REGION:us-east-1}
   access-key: ${AWS_ACCESS_KEY:test}
   secret-key: ${AWS_SECRET_KEY:test}
 
