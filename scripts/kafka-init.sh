@@ -7,7 +7,7 @@ set -e
 
 KAFKA_DIR="/opt/kafka"
 STORAGE_DIR="/var/lib/kafka"
-BOOTSTRAP_SERVER="localhost:9092"
+BOOTSTRAP_SERVER="kafka:9092"
 
 echo "Starting Kafka initialization..."
 
