@@ -12,4 +12,5 @@ plugins {
 
 rootProject.name = 'iris'
 include('apps:replayengine')
+include('apps:chipmunk-generator')
 include('libs:awsconfig')

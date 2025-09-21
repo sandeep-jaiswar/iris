@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package iris;
+
+option java_package = "org.jaiswarsecurities.iris.proto";
+option java_outer_classname = "IrisEvents";
+option java_multiple_files = true;
+
+// ---- Trade Event ----
+message TradeEvent {
+  string tradeId = 1;              // Unique trade ID (per venue/broker)
+  string orderId = 2;              // Parent order reference
+  string instrument = 3;           // ISIN, RIC, or symbol
+  string account = 4;              // Trading account ID
+  string counterparty = 5;         // Broker/Dealer/Exchange
+  double quantity = 6;             // Executed quantity
+  double price = 7;                // Execution price
+  string side = 8;                 // BUY or SELL
+  string venue = 9;                // Market or exchange (e.g., LSE, NYSE)
+  int64 tradeTimestamp = 10;       // Execution timestamp (epoch millis)
+  string status = 11;              // NEW, AMEND, CANCEL, FILLED, PARTIALLY_FILLED
+  string regulatoryId = 12;        // MiFID / SEC / local trade identifier
+  string traderId = 13;            // Internal trader reference
+  string strategyTag = 14;         // Algo strategy / manual / HFT
+  string correlationId = 15;       // For linking across events (e.g., parent-child orders)
+}
+
+// ---- Market Data Event ----
+message MarketDataEvent {
+  string instrument = 1;           // ISIN, RIC, or symbol
+  double bid = 2;
+  double ask = 3;
+  double lastPrice = 4;
+  double bidSize = 5;
+  double askSize = 6;
+  int64 timestamp = 7;             // Event-time in market feed
+  string venue = 8;                // Market or exchange
+  string sourceFeed = 9;           // e.g., Bloomberg, Reuters, DirectFeed
+}
+
+// ---- FX Rate Event ----
+message FxRateEvent {
+  string fromCurrency = 1;         // ISO code (e.g., USD)
+  string toCurrency = 2;           // ISO code (e.g., JPY)
+  double rate = 3;
+  double bid = 4;                  // FX bid
+  double ask = 5;                  // FX ask
+  int64 timestamp = 6;
+  string source = 7;                // Feed provider (e.g., EBS, Refinitiv)
+}
+
+// ---- Wrapper for Chipmunk File ----
+message ChipmunkRecord {
+  string eventType = 1;            // TRADE, MARKET_DATA, FX
+  int64 timestamp = 2;             // Event timestamp
+  string region = 3;               // Region (UK, US, JP, CN)
+  string correlationId = 4;        // For linking multi-stream events
+  bytes payload = 5;                // serialized TradeEvent, MarketDataEvent, or FxRateEvent
+}
