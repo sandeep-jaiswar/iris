@@ -1,0 +1,86 @@
+# IRIS Replay Engine Configuration Template
+# This configuration supports local development and production deployments
+
+replay:
+  # Replay speed modes: real-time, accelerated, burst
+  speed-mode: real-time
+  
+  # Speed multiplier for accelerated mode (ignored in real-time and burst modes)
+  speed-multiplier: 10.0
+  
+  # Batch size for burst mode
+  burst-batch-size: 1000
+  
+  # Source configuration
+  source:
+    # Source type: minio, local-file
+    type: minio
+    
+    # MinIO/S3 configuration (used when type=minio)
+    minio:
+      bucket-name: iris-chipmunk-files
+      object-key: sample-data/trades-2024-01-01.chipmunk
+    
+    # Local file configuration (used when type=local-file)  
+    local:
+      file-path: /data/chipmunk/trades-2024-01-01.chipmunk
+  
+  # Checkpointing configuration
+  checkpoint:
+    enabled: true
+    interval-seconds: 30
+    storage-type: file  # file, dynamodb
+    file-path: /tmp/replay-checkpoint.json
+
+# Kafka configuration
+kafka:
+  bootstrap-servers: localhost:9092
+  producer:
+    # Producer configuration for high throughput
+    acks: all
+    retries: 3
+    batch-size: 16384
+    linger-ms: 5
+    buffer-memory: 33554432
+    max-request-size: 1048576
+    compression-type: lz4
+  
+  topics:
+    trade-events: trade-events
+    market-data: market-data
+    fx-rates: fx-rates
+
+# AWS configuration (inherited from awsconfig library)
+aws:
+  aws-region: us-east-1
+  endpoint-url: http://localhost:4566  # LocalStack
+  use-local-stack: true
+  access-key: test
+  secret-key: test
+
+# Metrics configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging configuration
+logging:
+  level:
+    org.jaiswarsecurities.replayengine: INFO
+    org.apache.kafka: WARN
+    software.amazon.awssdk: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

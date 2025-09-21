@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: iris-replay-engine
+  profiles:
+    active: default
+  config:
+    import: 
+      - optional:classpath:replay-config.yaml
+      - optional:file:./config/replay-config.yaml
+
+server:
+  port: 8081
+
+# Enable async processing
+spring.task.execution.pool.core-size: 4
+spring.task.execution.pool.max-size: 8
+spring.task.execution.pool.queue-capacity: 100

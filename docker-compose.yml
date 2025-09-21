@@ -54,25 +54,9 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-    command: >
-      bash -c "
-        echo 'Waiting for Kafka to be fully ready...'
-        sleep 10
-        
-        echo 'Creating default topics...'
-        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic test-topic --partitions 3 --replication-factor 1 || true
-        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic user-events --partitions 3 --replication-factor 1 || true
-        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic system-logs --partitions 3 --replication-factor 1 || true
-        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic notifications --partitions 2 --replication-factor 1 || true
-        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic metrics --partitions 1 --replication-factor 1 || true
-        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic dev-topic --partitions 1 --replication-factor 1 || true
-        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic integration-test --partitions 1 --replication-factor 1 || true
-        
-        echo 'Listing created topics:'
-        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list
-        
-        echo 'Topic creation completed!'
-      "
+    volumes:
+      - ./scripts:/scripts:ro
+    command: ["bash", "/scripts/kafka-init.sh"]
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest

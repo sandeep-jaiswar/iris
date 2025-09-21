@@ -7,7 +7,7 @@ set -e
 
 KAFKA_DIR="/opt/kafka"
 STORAGE_DIR="/var/lib/kafka"
-BOOTSTRAP_SERVER="localhost:9092"
+BOOTSTRAP_SERVER="kafka:9092"
 
 echo "Starting Kafka initialization..."
 
@@ -84,6 +84,11 @@ main() {
     create_topic "system-logs" 3 1
     create_topic "notifications" 2 1
     create_topic "metrics" 1 1
+    
+    # IRIS-specific topics for financial data
+    create_topic "trade-events" 6 1
+    create_topic "market-data" 6 1
+    create_topic "fx-rates" 3 1
     
     # Additional topics for development/testing
     create_topic "dev-topic" 1 1
