@@ -46,19 +46,34 @@ public class ReplayScheduler {
     private volatile Instant lastEventTime;
     private volatile String currentFileId;
     
+    private volatile boolean metricsInitialized = false;
+    
     @PostConstruct
     public void initMetrics() {
-        Gauge.builder("replay.events.processed", this, ReplayScheduler::getEventsProcessed)
-                .description("Number of events processed during current replay")
-                .register(meterRegistry);
-                
-        Gauge.builder("replay.events.failed", this, ReplayScheduler::getEventsFailed)
-                .description("Number of events that failed during current replay")
-                .register(meterRegistry);
-                
-        Gauge.builder("replay.is.running", this, scheduler -> scheduler.isRunning() ? 1.0 : 0.0)
-                .description("Whether replay is currently running (1=running, 0=stopped)")
-                .register(meterRegistry);
+        if (metricsInitialized) {
+            log.debug("Metrics already initialized, skipping");
+            return;
+        }
+        
+        try {
+            Gauge.builder("replay.events.processed", this, ReplayScheduler::getEventsProcessed)
+                    .description("Number of events processed during current replay")
+                    .register(meterRegistry);
+                    
+            Gauge.builder("replay.events.failed", this, ReplayScheduler::getEventsFailed)
+                    .description("Number of events that failed during current replay")
+                    .register(meterRegistry);
+                    
+            Gauge.builder("replay.is.running", this, scheduler -> scheduler.isRunning() ? 1.0 : 0.0)
+                    .description("Whether replay is currently running (1=running, 0=stopped)")
+                    .register(meterRegistry);
+                    
+            metricsInitialized = true;
+            log.debug("Metrics initialized successfully");
+        } catch (Exception e) {
+            log.warn("Failed to initialize metrics, continuing without metrics", e);
+            // Don't throw the exception to prevent application startup failure
+        }
     }
     
     /**

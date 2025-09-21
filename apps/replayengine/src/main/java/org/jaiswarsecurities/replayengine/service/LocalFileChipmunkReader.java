@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jaiswarsecurities.replayengine.config.ReplayProperties;
 import org.jaiswarsecurities.replayengine.model.ChipmunkEvent;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -23,11 +23,12 @@ import java.util.stream.Stream;
 
 /**
  * Implementation of ChipmunkReader that reads files from local filesystem.
+ * This serves as the fallback implementation when MinIO is not available.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "replay.source.type", havingValue = "local-file")
+@ConditionalOnMissingBean(ChipmunkReader.class)
 public class LocalFileChipmunkReader implements ChipmunkReader {
     
     private final ReplayProperties replayProperties;

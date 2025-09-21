@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "replay.source.type", havingValue = "minio")
+@ConditionalOnProperty(name = "replay.source.type", havingValue = "minio", matchIfMissing = true)
 public class MinIOChipmunkReader implements ChipmunkReader {
     
     private final S3Client s3Client;
