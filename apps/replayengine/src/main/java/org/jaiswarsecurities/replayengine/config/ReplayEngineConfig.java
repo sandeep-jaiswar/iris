@@ -10,6 +10,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Import;
 import org.jaiswarsecurities.awsconfig.AwsConfig;
 
@@ -25,6 +26,7 @@ import java.util.Properties;
 public class ReplayEngineConfig {
     
     @Bean
+    @ConditionalOnMissingBean
     public KafkaProducer<String, String> kafkaProducer(KafkaProperties kafkaProperties) {
         Properties props = new Properties();
         

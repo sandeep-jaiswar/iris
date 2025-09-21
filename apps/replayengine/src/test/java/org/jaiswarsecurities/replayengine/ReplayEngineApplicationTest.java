@@ -1,14 +1,14 @@
 package org.jaiswarsecurities.replayengine;
 
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
-import org.apache.kafka.clients.producer.KafkaProducer;
 
 /**
  * Basic integration test for the Replay Engine Application.
- * Verifies that the Spring Boot context loads successfully with mocked dependencies.
+ * Verifies that the Spring Boot context loads successfully.
  */
 @SpringBootTest(
     classes = ReplayEngineApplication.class,
@@ -30,6 +30,6 @@ class ReplayEngineApplicationTest {
     void contextLoads() {
         // This test verifies that the Spring application context
         // can be loaded successfully with all beans configured.
-        // KafkaProducer is mocked to avoid configuration issues in test environment.
+        // The KafkaProducer is mocked to avoid dependency issues in test environment.
     }
 }
