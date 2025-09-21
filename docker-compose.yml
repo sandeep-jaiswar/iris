@@ -34,8 +34,11 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       
       # JVM settings
-      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
-      
+      KAFKA_HEAP_OPTS: "-Xmx2G -Xms2G"
+      KAFKA_CONTROLLER_SOCKET_TIMEOUT_MS: 10000
+      KAFKA_CONTROLLER_REQUEST_TIMEOUT_MS: 10000
+      KAFKA_BROKER_HEARTBEAT_INTERVAL_MS: 1000
+      KAFKA_BROKER_SESSION_TIMEOUT_MS: 10000
     volumes:
       - kafka-data:/var/lib/kafka/data
     healthcheck:
@@ -45,6 +48,14 @@ services:
       retries: 5
       start_period: 60s
     user: "0:0"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 3072M
+        reservations:
+          cpus: '1.00'
+          memory: 1024M
 
   kafka-init:
     image: apache/kafka:4.1.0
@@ -105,12 +116,67 @@ services:
     volumes:
       - localstack-data:/var/lib/localstack
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./scripts:/scripts:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 30s
+    restart: unless-stopped
+
+  minio-init:
+    image: amazon/aws-cli
+    container_name: minio-init
+    depends_on:
+      localstack:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts:ro
+    entrypoint: ["/bin/bash", "/scripts/minio-create-bucket.sh"]
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+
+  replayengine:
+    image: iris-replayengine:latest
+    container_name: replayengine
+    build:
+      context: .
+      dockerfile: apps/replayengine/Dockerfile
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      S3_ENDPOINT: http://localstack:4566
+      # Add any other config overrides here
+    volumes:
+      - ./config/replayengine:/app/config:ro   # Mount external config if needed
+      - ./logs/replayengine:/app/logs          # Mount logs directory
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - default
     restart: unless-stopped
 
 volumes:
