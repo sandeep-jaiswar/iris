@@ -37,7 +37,7 @@ kafka:
   bootstrap-servers: localhost:9092
   producer:
     # Producer configuration for high throughput
-    acks: 1
+    acks: all
     retries: 3
     batch-size: 16384
     linger-ms: 5
