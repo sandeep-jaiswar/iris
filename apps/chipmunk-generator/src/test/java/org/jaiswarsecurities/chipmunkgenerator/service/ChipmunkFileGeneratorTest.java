@@ -16,6 +16,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 /**
  * Unit tests for ChipmunkFileGenerator.
@@ -45,8 +46,8 @@ class ChipmunkFileGeneratorTest {
         String fileName = "test-events.chip";
         int eventCount = 5; // Small count for testing
         
-        // Mock event generation responses
-        when(eventDataGenerator.generateTradeEvent(any(), any(), any()))
+        // Mock event generation responses - use lenient() to avoid unnecessary stubbing errors
+        lenient().when(eventDataGenerator.generateTradeEvent(any(), any(), any()))
             .thenReturn(org.jaiswarsecurities.iris.proto.TradeEvent.newBuilder()
                 .setTradeId("TEST-001")
                 .setInstrument("AAPL")
@@ -57,7 +58,7 @@ class ChipmunkFileGeneratorTest {
                 .setTradeTimestamp(System.currentTimeMillis())
                 .build());
                 
-        when(eventDataGenerator.generateMarketDataEvent(any(), any()))
+        lenient().when(eventDataGenerator.generateMarketDataEvent(any(), any()))
             .thenReturn(org.jaiswarsecurities.iris.proto.MarketDataEvent.newBuilder()
                 .setInstrument("AAPL")
                 .setBid(149.5)
@@ -66,7 +67,7 @@ class ChipmunkFileGeneratorTest {
                 .setTimestamp(System.currentTimeMillis())
                 .build());
                 
-        when(eventDataGenerator.generateFxRateEvent(any(), any()))
+        lenient().when(eventDataGenerator.generateFxRateEvent(any(), any()))
             .thenReturn(org.jaiswarsecurities.iris.proto.FxRateEvent.newBuilder()
                 .setFromCurrency("USD")
                 .setToCurrency("EUR")
