@@ -1,0 +1,84 @@
+spring:
+  application:
+    name: chipmunk-generator
+  main:
+    banner-mode: console
+    web-application-type: none
+
+# Chipmunk Generator Configuration
+chipmunk:
+  generator:
+    bucket-name: chipmunk-archive
+    base-path: generated
+    regions:
+      - UK
+      - US
+      - JP
+      - CN
+    event-generation:
+      trade-event-ratio: 0.5
+      market-data-event-ratio: 0.3
+      fx-rate-event-ratio: 0.2
+      time-range-hours: 24
+      instruments:
+        - AAPL
+        - MSFT
+        - GOOGL
+        - AMZN
+        - TSLA
+        - META
+        - NVDA
+        - NFLX
+        - ORCL
+        - CRM
+        - INTC
+        - AMD
+        - ADBE
+        - PYPL
+        - UBER
+        - SPOT
+      currency-pairs:
+        - USD/EUR
+        - USD/GBP
+        - USD/JPY
+        - USD/CNY
+        - EUR/GBP
+        - EUR/JPY
+        - GBP/JPY
+        - AUD/USD
+        - USD/CAD
+        - USD/CHF
+      venues:
+        - LSE
+        - NYSE
+        - NASDAQ
+        - TSE
+        - SSE
+        - XTRA
+        - EURONEXT
+
+# AWS Configuration for MinIO
+aws:
+  endpoint-url: ${AWS_ENDPOINT_URL:http://localhost:4566}
+  aws-region: ${AWS_REGION:us-east-1}
+  access-key: ${AWS_ACCESS_KEY:test}
+  secret-key: ${AWS_SECRET_KEY:test}
+
+# Logging Configuration
+logging:
+  level:
+    org.jaiswarsecurities.chipmunkgenerator: INFO
+    org.jaiswarsecurities.awsconfig: INFO
+    software.amazon.awssdk: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Management and Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

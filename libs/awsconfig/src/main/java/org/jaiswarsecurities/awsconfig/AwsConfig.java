@@ -29,6 +29,8 @@ public class AwsConfig {
 
         if (StringUtils.isNotBlank(props.getEndpointUrl())) {
             builder.endpointOverride(java.net.URI.create(props.getEndpointUrl()));
+            // Enable path-style access for LocalStack compatibility
+            builder.forcePathStyle(true);
         }
 
         return builder.build();

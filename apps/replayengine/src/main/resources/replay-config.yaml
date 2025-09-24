@@ -1,4 +1,4 @@
-# IRIS Replay Engine Configuration Template
+       # IRIS Replay Engine Configuration Template
 # This configuration supports local development and production deployments
 
 replay:
@@ -18,8 +18,8 @@ replay:
     
     # MinIO/S3 configuration (used when type=minio)
     minio:
-      bucket-name: iris-chipmunk-files
-      object-key: sample-data/trades-2024-01-01.chipmunk
+      bucket-name: chipmunk-archive
+      object-key: generated/sample-events-1758687308549.chip
     
     # Local file configuration (used when type=local-file)  
     local:

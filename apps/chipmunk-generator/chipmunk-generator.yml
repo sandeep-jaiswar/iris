@@ -1,0 +1,87 @@
+# Sample Configuration for Chipmunk File Generator
+spring:
+  application:
+    name: chipmunk-generator
+  main:
+    banner-mode: console
+    web-application-type: none
+
+# Chipmunk Generator Configuration
+chipmunk:
+  generator:
+    bucket-name: chipmunk-archive        # MinIO bucket name
+    base-path: generated                 # Path within bucket
+    regions: [UK, US, JP, CN]           # Regions to generate events for
+    event-generation:
+      trade-event-ratio: 0.5            # 50% trade events
+      market-data-event-ratio: 0.3      # 30% market data events
+      fx-rate-event-ratio: 0.2          # 20% FX events
+      time-range-hours: 24              # Spread events over 24 hours
+      
+      # Financial instruments for trades and market data
+      instruments:
+        - AAPL    # Apple Inc.
+        - MSFT    # Microsoft Corp.
+        - GOOGL   # Alphabet Inc.
+        - AMZN    # Amazon.com Inc.
+        - TSLA    # Tesla Inc.
+        - META    # Meta Platforms Inc.
+        - NVDA    # NVIDIA Corp.
+        - NFLX    # Netflix Inc.
+        - ORCL    # Oracle Corp.
+        - CRM     # Salesforce Inc.
+        - INTC    # Intel Corp.
+        - AMD     # Advanced Micro Devices
+        - ADBE    # Adobe Inc.
+        - PYPL    # PayPal Holdings
+        - UBER    # Uber Technologies
+        - SPOT    # Spotify Technology
+      
+      # Currency pairs for FX events
+      currency-pairs:
+        - USD/EUR  # Dollar/Euro
+        - USD/GBP  # Dollar/Pound
+        - USD/JPY  # Dollar/Yen
+        - USD/CNY  # Dollar/Yuan
+        - EUR/GBP  # Euro/Pound
+        - EUR/JPY  # Euro/Yen
+        - GBP/JPY  # Pound/Yen
+        - AUD/USD  # Australian Dollar/Dollar
+        - USD/CAD  # Dollar/Canadian Dollar
+        - USD/CHF  # Dollar/Swiss Franc
+      
+      # Trading venues
+      venues:
+        - LSE      # London Stock Exchange
+        - NYSE     # New York Stock Exchange
+        - NASDAQ   # NASDAQ
+        - TSE      # Tokyo Stock Exchange
+        - SSE      # Shanghai Stock Exchange
+        - XTRA     # Xetra
+        - EURONEXT # Euronext
+
+# AWS/MinIO Configuration
+aws:
+  endpoint-url: ${AWS_ENDPOINT_URL:http://localhost:4566}  # LocalStack/MinIO endpoint
+  aws-region: ${AWS_REGION:us-east-1}                     # AWS region
+  access-key: ${AWS_ACCESS_KEY:test}                      # Access key
+  secret-key: ${AWS_SECRET_KEY:test}                      # Secret key
+
+# Logging Configuration
+logging:
+  level:
+    org.jaiswarsecurities.chipmunkgenerator: INFO
+    org.jaiswarsecurities.awsconfig: INFO
+    software.amazon.awssdk: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Management Endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
